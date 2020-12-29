@@ -4,9 +4,9 @@ import os
 
 import sentencepiece as spm
 
-INPUT_KO_CORPUS = "./dataset/wiki/kowiki-200420.txt"
-INPUT_EN_CORPUS = "./dataset/wiki/sample_en-wiki-200420.txt"  # for English SentencePiece(BPE) Tokenizer
-INPUT_MECAB_TOKENIZED_CORPUS = "./dataset/wiki/mecab_tokenized/mecab/kowiki-200420.txt"  # for MeCab-SentencePiece Tokenizer
+INPUT_KO_CORPUS = "./dataset/t5/t5_multi.txt"
+#INPUT_EN_CORPUS = "./dataset/wiki/sample_en-wiki-200420.txt"  # for English SentencePiece(BPE) Tokenizer
+INPUT_MECAB_TOKENIZED_CORPUS = "./dataset/t5/mecab_tokenized/t5_multi.txt"  # for MeCab-SentencePiece Tokenizer
 
 OUTPUT_DIR = "./resources"
 
@@ -20,11 +20,11 @@ if __name__ == "__main__":
         default="identity",
         choices=["nmt_nfkc", "nfkc", "nmt_nfkc_cf", "nfkc_cf", "identity"],
     )  # set "nmt_nfkc" for english training
-    parser.add_argument("--pad_piece", type=str, default="[PAD]", help="index=0")
-    parser.add_argument("--unk_piece", type=str, default="[UNK]", help="index=1")
-    parser.add_argument("--bos_piece", type=str, default="[BOS]", help="index=2")
-    parser.add_argument("--eos_piece", type=str, default="[EOS]", help="index=3")
-    parser.add_argument("--unk_surface", type=str, default="[UNK]")
+    parser.add_argument("--pad_piece", type=str, default="<pad>", help="index=0")
+    parser.add_argument("--unk_piece", type=str, default="<unk>", help="index=2")
+    parser.add_argument("--bos_piece", type=str, default="<s>", help="index=-1")
+    parser.add_argument("--eos_piece", type=str, default="</s>", help="index=1")
+    parser.add_argument("--unk_surface", type=str, default="<unk>")
     parser.add_argument(
         "--special_symbols",
         type=str,
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         help="Special tokens. You can pass a comma-separated list of special tokens.",
     )
     parser.add_argument(
-        "--tokenizer_type", type=str, default="ko", choices=["ko", "en", "mecab_tokenized"]
+        "--tokenizer_type", type=str, default="mecab_tokenized", choices=["ko", "en", "mecab_tokenized"]
     )  # ko: Korean Wiki Corpus, en: English Wiki Corpus, mecab_tokenized: Korean Wiki Corpus tokenized by MeCab
     args = vars(parser.parse_args())
     print(args)
@@ -62,20 +62,22 @@ if __name__ == "__main__":
     cmd += f"--model_type=bpe "
     cmd += f"--character_coverage={args['character_coverage']} "
     cmd += f"--normalization_rule_name={args['normalization_rule_name']} "
-    cmd += f"--pad_id=0 --unk_id=1 --bos_id=2 --eos_id=3 "
+    cmd += f"--pad_id=0 --unk_id=2 --bos_id=-1 --eos_id=1 "
     cmd += f"--pad_piece={args['pad_piece']} "
     cmd += f"--unk_piece={args['unk_piece']} "
     cmd += f"--bos_piece={args['bos_piece']} "
     cmd += f"--eos_piece={args['eos_piece']} "
     cmd += f"--unk_surface={args['unk_surface']} "
-    cmd += f"--user_defined_symbols={args['special_symbols']} "
+    #cmd += f"--user_defined_symbols={args['special_symbols']} "
 
     spm.SentencePieceTrainer.Train(cmd)
 
     # fairseq vocab
+    '''
     with open(os.path.join(output_dir, "fairseq.vocab"), "w") as fout:
         with open(os.path.join(output_dir, "tok.vocab"), "r") as fin:
             start_idx = 4 + len(args["special_symbols"].split(","))  # pad, unk, bos, eos + special_symbols
             for line in fin.readlines()[start_idx:]:
                 splitted = line.split("\t")
                 fout.write(f"{' '.join(splitted)}")
+     '''
